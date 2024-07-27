@@ -16,7 +16,14 @@ open class BinderEvent<IntentType> : BinderProducer<IntentType> {
             executor.execute {
                 callListeners(intent)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
+        }
+    }
+
+    open fun produceInline(intent: IntentType) {
+        try {
+            callListeners(intent)
+        } catch (_: Exception) {
         }
     }
 
