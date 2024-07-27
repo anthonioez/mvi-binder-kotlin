@@ -29,6 +29,10 @@ abstract class MviModel<I, E> : BinderConsumer,
     }
 
     protected fun serialExecute(run: () -> Unit) {
+        if (executor.isTerminated || executor.isShutdown) {
+            return
+        }
+
         executor.execute(run)
     }
 
