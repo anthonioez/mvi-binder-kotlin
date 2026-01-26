@@ -7,7 +7,7 @@ import java.util.concurrent.Executors
 
 open class BinderEvent<IntentType> : BinderProducer<IntentType> {
 
-    private val executor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
+    protected val executor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
 
     private var listeners: MutableList<BinderObserver<IntentType>> = ArrayList()
 
@@ -28,26 +28,34 @@ open class BinderEvent<IntentType> : BinderProducer<IntentType> {
     }
 
     private fun callListeners(event: IntentType) {
-        val list = ArrayList(listeners)
+        val list = synchronized(listeners) {
+             ArrayList(listeners)
+        }
         for (listener in list) {
             listener.onEvent(event)
         }
     }
 
     override fun subscribe(observer: BinderObserver<IntentType>) {
-        if (!listeners.contains(observer)) {
-            listeners.add(observer)
+        synchronized(listeners) {
+            if (!listeners.contains(observer)) {
+                listeners.add(observer)
+            }
         }
     }
 
     override fun unsubscribe(observer: BinderObserver<IntentType>) {
-        if (listeners.contains(observer)) {
-            listeners.remove(observer)
+        synchronized(listeners) {
+            if (listeners.contains(observer)) {
+                listeners.remove(observer)
+            }
         }
     }
 
     open fun destroy() {
-        executor.shutdown()
-        listeners.clear()
+        // executor.shutdown() // Shared executor, do not shutdown
+        synchronized(listeners) {
+            listeners.clear()
+        }
     }
 }

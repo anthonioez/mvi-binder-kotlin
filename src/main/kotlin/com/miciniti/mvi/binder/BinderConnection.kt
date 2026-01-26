@@ -18,17 +18,18 @@ data class BinderConnection<Out>(
     fun connect() {
         listener = object : BinderObserver<Out> {
             override fun onEvent(event: Out) {
-                val newEvent = event as Any?
-                if (newEvent != null) {
-                    val interceptedEvent = if (intercept) {
-                        Binder.intercept(name, newEvent)
-                    } else {
-                        newEvent
-                    }
-
-                    val finalEvent = transformer?.invoke(interceptedEvent) ?: interceptedEvent
-                    finalEvent.let { to.consume(it) }
+                if (event == null) {
+                    return
                 }
+
+                val processedEvent: Any = if (intercept) {
+                    Binder.intercept(name, event as Any)
+                } else {
+                    event as Any
+                }
+
+                val finalEvent = transformer?.invoke(processedEvent) ?: processedEvent
+                to.consume(finalEvent)
             }
         }
         listener?.let { from.subscribe(it) }
